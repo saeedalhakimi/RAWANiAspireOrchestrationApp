@@ -1,7 +1,7 @@
 ﻿using Microsoft.Data.SqlClient.Diagnostics;
 using RAWANiAspireOrchestrationApp.ApiService.Application.Abstractions.Repositories;
 using RAWANiAspireOrchestrationApp.ApiService.Application.Abstractions.Services;
-using RAWANiAspireOrchestrationApp.ApiService.Domain.Intities.UserProfileIntity;
+using RAWANiAspireOrchestrationApp.ApiService.Domain.Entities.UserProfileEntity;
 using RAWANiAspireOrchestrationApp.ApiService.Domain.Models;
 using RAWANiAspireOrchestrationApp.ApiService.Infrastructure.Data.DataFactory;
 using System.Data;

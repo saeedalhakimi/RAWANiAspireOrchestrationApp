@@ -1,6 +1,6 @@
 ﻿using RAWANiAspireOrchestrationApp.ApiService.Domain.Models;
 
-namespace RAWANiAspireOrchestrationApp.ApiService.Domain.Intities.UserProfileIntity
+namespace RAWANiAspireOrchestrationApp.ApiService.Domain.Entities.UserProfileEntity
 {
     public class UserProfile
     {

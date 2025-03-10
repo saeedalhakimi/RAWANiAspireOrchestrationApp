@@ -1,4 +1,4 @@
-﻿using RAWANiAspireOrchestrationApp.ApiService.Domain.Intities.UserProfileIntity;
+﻿using RAWANiAspireOrchestrationApp.ApiService.Domain.Entities.UserProfileEntity;
 using RAWANiAspireOrchestrationApp.ApiService.Domain.Models;
 
 namespace RAWANiAspireOrchestrationApp.ApiService.Application.Abstractions.Repositories

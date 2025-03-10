@@ -5,7 +5,7 @@ using RAWANiAspireOrchestrationApp.ApiService.Application.Contracts.UserProfileD
 using RAWANiAspireOrchestrationApp.ApiService.Application.Contracts.UserProfileDtos.Responses;
 using RAWANiAspireOrchestrationApp.ApiService.Application.MDItoRS.UserProfileMDi.Commands;
 using RAWANiAspireOrchestrationApp.ApiService.Application.Services;
-using RAWANiAspireOrchestrationApp.ApiService.Domain.Intities.UserProfileIntity;
+using RAWANiAspireOrchestrationApp.ApiService.Domain.Entities.UserProfileEntity;
 using RAWANiAspireOrchestrationApp.ApiService.Domain.Models;
 
 namespace RAWANiAspireOrchestrationApp.ApiService.Application.MDItoRS.UserProfileMDi.CommandHandlers

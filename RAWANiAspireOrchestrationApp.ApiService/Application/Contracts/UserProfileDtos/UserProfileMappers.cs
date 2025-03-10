@@ -1,5 +1,5 @@
 ﻿using RAWANiAspireOrchestrationApp.ApiService.Application.Contracts.UserProfileDtos.Responses;
-using RAWANiAspireOrchestrationApp.ApiService.Domain.Intities.UserProfileIntity;
+using RAWANiAspireOrchestrationApp.ApiService.Domain.Entities.UserProfileEntity;
 
 namespace RAWANiAspireOrchestrationApp.ApiService.Application.Contracts.UserProfileDtos
 {
