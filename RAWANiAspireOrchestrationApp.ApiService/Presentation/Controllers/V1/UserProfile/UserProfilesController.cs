@@ -102,5 +102,27 @@ namespace RAWANiAspireOrchestrationApp.ApiService.Presentation.Controllers.V1.Us
             return Ok(result);
         }
 
+        [HttpDelete(ApiRoutes.UserProfileRouts.IdRoute, Name = "DeleteUserProfileAsync")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status499ClientClosedRequest)]
+        [ValidateGuid("userProfileId")]
+        public async Task<IActionResult> DeleteUserProfile(
+            [FromRoute] Guid userProfileId,
+            CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Proccessing Delete user profile request... ");
+            var command = new DeleteUserProfileCommand
+            {
+                UserProfileId = userProfileId
+            };
+            _logger.LogInformation("Sending DeleteUserProfileCommand to Mediator... ");
+            var result = await _mediator.Send(command, cancellationToken);
+            if (!result.IsSuccess) return HandleErrorResponse(result);
+            _logger.LogInformation("Request Proccessed successfully... ");
+            return NoContent();
+        }
     }
 }

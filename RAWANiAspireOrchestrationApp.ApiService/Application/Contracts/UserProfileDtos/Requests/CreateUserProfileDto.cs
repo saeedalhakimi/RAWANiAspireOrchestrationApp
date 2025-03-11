@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using RAWANiAspireOrchestrationApp.ApiService.Application.Filters;
+using System.ComponentModel.DataAnnotations;
 
 namespace RAWANiAspireOrchestrationApp.ApiService.Application.Contracts.UserProfileDtos.Requests
 {
@@ -18,6 +19,7 @@ namespace RAWANiAspireOrchestrationApp.ApiService.Application.Contracts.UserProf
         public string Email { get; set; }
 
         [Required(ErrorMessage = "Date of Birth Required..")]
+        [AgeRange(18, 125)] // Validate age is between 18 and 125 years
         public DateTime DateOfBirth { get; set; }
 
         [StringLength(20, ErrorMessage = "Phone Number must be less than 50 characters..")]

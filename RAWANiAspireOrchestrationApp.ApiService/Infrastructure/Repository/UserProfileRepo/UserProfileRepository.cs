@@ -2,6 +2,7 @@
 using RAWANiAspireOrchestrationApp.ApiService.Application.Abstractions.Repositories;
 using RAWANiAspireOrchestrationApp.ApiService.Application.Abstractions.Services;
 using RAWANiAspireOrchestrationApp.ApiService.Domain.Entities.UserProfileEntity;
+using RAWANiAspireOrchestrationApp.ApiService.Domain.Entities.UserProfileEntity.ValueObjects;
 using RAWANiAspireOrchestrationApp.ApiService.Domain.Models;
 using RAWANiAspireOrchestrationApp.ApiService.Infrastructure.Data.DataFactory;
 using System.Data;
@@ -16,7 +17,7 @@ namespace RAWANiAspireOrchestrationApp.ApiService.Infrastructure.Repository.User
         private readonly string _connectionString;
         public UserProfileRepository(
             IConfiguration configuration, IDatabaseConnectionFactory connectionFactory,
-            IErrorHandler errorHandler, ILogger<UserProfileRepository> logger,string connectionString = null)
+            IErrorHandler errorHandler, ILogger<UserProfileRepository> logger, string connectionString = null)
         {
             _connectionString = connectionString ?? configuration.GetConnectionString("DefaultConnection")!;
             _connectionFactory = connectionFactory;
@@ -36,12 +37,12 @@ namespace RAWANiAspireOrchestrationApp.ApiService.Infrastructure.Repository.User
                 using var command = connection.CreateCommand();
                 command.CommandText = "SP_CreateUserProfile";
                 command.CommandType = CommandType.StoredProcedure;
-                command.AddParameter("@UserProfileID", userProfile.UserProfileID);
-                command.AddParameter("@UserID", userProfile.UserID);
-                command.AddParameter("@Firstname", userProfile.BasicInfo.Firstname);
-                command.AddParameter("@Lastname", userProfile.BasicInfo.Lastname);
-                command.AddParameter("@Email", userProfile.BasicInfo.Email);
-                command.AddParameter("@DateOfBirth", userProfile.BasicInfo.DateOfBirth);
+                command.AddParameter("@UserProfileID", userProfile.UserProfileID.Value);
+                command.AddParameter("@UserID", userProfile.UserID.Value);
+                command.AddParameter("@Firstname", userProfile.BasicInfo.Firstname.Value);
+                command.AddParameter("@Lastname", userProfile.BasicInfo.Lastname.Value);
+                command.AddParameter("@Email", userProfile.BasicInfo.Email.Value);
+                command.AddParameter("@DateOfBirth", userProfile.BasicInfo.DateOfBirth.Value);
                 command.AddParameter("@PhoneNumber", userProfile.BasicInfo.PhoneNumber ?? (object)DBNull.Value);
                 command.AddParameter("@CurrentCity", userProfile.BasicInfo.CurrentCity ?? (object)DBNull.Value);
                 command.AddParameter("@CreatedAt", userProfile.CreatedAt);
@@ -209,7 +210,8 @@ namespace RAWANiAspireOrchestrationApp.ApiService.Infrastructure.Repository.User
                         reader.GetDateTime(reader.GetOrdinal("UpdatedAt"))
                         );
 
-                    if (!userProfile.IsSuccess) { 
+                    if (!userProfile.IsSuccess)
+                    {
                         _logger.LogError("Error occurred while creating UserProfile from retrieved user profile data. Error: {error}", userProfile.Errors);
                         return OperationResult<UserProfile>.Failure(userProfile.Errors);
                     }
@@ -243,17 +245,17 @@ namespace RAWANiAspireOrchestrationApp.ApiService.Infrastructure.Repository.User
 
                 await using var connection = await _connectionFactory.CreateConnectionAsync(_connectionString, cancellationToken);
                 using var command = connection.CreateCommand();
-                command.CommandText = "SELECT COUNT(1) FROM UserProfile WHERE Email = @Email";
+                command.CommandText = "SELECT COUNT(1) FROM UserProfile WHERE Email = @Email AND IsDeleted = 0";
                 command.CommandType = CommandType.Text;
                 command.AddParameter("@Email", email);
 
                 await connection.OpenAsync(cancellationToken);
-                _logger.LogInformation("Database connection opened. Executing command...");
+                _logger.LogInformation("Database connection opened. Executing query...");
 
                 _logger.LogInformation("Executing query '{query}' to get the result. ", command.CommandText);
 
                 var count = (int)await command.ExecuteScalarAsync(cancellationToken);
-               _logger.LogInformation("Query executed successfully. Result: {count}", count);
+                _logger.LogInformation("Query executed successfully. Result: {count}", count);
 
                 // Return the result
                 return OperationResult<bool>.Success(count > 0);
@@ -266,7 +268,81 @@ namespace RAWANiAspireOrchestrationApp.ApiService.Infrastructure.Repository.User
             {
                 return _errorHandler.HandleException<bool>(ex);
             }
-        }
+        }      
+        public async Task<OperationResult<bool>> DeleteUserProfileAsync(Guid userProfileId, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Deleting user profile from Database...");
+            try
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                _logger.LogDebug("Cancellation token checked. Proceeding with database connection.");
 
+                await using var connection = await _connectionFactory.CreateConnectionAsync(_connectionString, cancellationToken);
+                using var command = connection.CreateCommand();
+                command.CommandText = "SP_SoftDeleteUserProfile";
+                command.CommandType = CommandType.StoredProcedure;
+                command.AddParameter("@UserProfileID", userProfileId);
+                command.AddParameter("@DeletedBy", userProfileId);
+                command.AddOutputParameter("@RowsAffected", SqlDbType.Int);
+
+                await connection.OpenAsync(cancellationToken);
+                _logger.LogInformation("Database connection opened. Executing command...");
+
+                _logger.LogInformation("Executing Stored Procedure '{StoredProcedure}' to delete the user profile. ", command.CommandText);
+                await command.ExecuteNonQueryAsync(cancellationToken);
+                int rowsAffected = Convert.ToInt32(command.GetParameterValue("@RowsAffected"));
+                if (rowsAffected > 0)
+                {
+                    _logger.LogInformation("User profile deleted successfully. UserProfileID: {UserProfileID}", userProfileId);
+                    return OperationResult<bool>.Success(true);
+                }
+                else
+                {
+                    _logger.LogError("Failed to delete user profile. Rows affected: {RowsAffected}", rowsAffected);
+                    return OperationResult<bool>.Failure(ErrorCode.NotFound, "USER_PROFILE_NOT_FOUND", "User profile not found or already deleted.");
+                }
+            }
+            catch (OperationCanceledException ex)
+            {
+                return _errorHandler.HandleCancelationToken<bool>(ex);
+            }
+            catch (Exception ex)
+            {
+                return _errorHandler.HandleException<bool>(ex);
+            }
+        }
+        public async Task<OperationResult<bool>> IsUserProfileExistsAsync(Guid userProfileID, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Checking if user profile exists by ID");
+            try
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                _logger.LogDebug("Cancellation token checked. Proceeding with database connection.");
+
+                await using var connection = await _connectionFactory.CreateConnectionAsync(_connectionString, cancellationToken);
+                using var command = connection.CreateCommand();
+                command.CommandText = "SELECT COUNT(1) FROM UserProfile WHERE UserProfileId = @UserProfileId AND IsDeleted = 0";
+                command.CommandType = CommandType.Text;
+                command.AddParameter("@UserProfileId", userProfileID);
+
+                await connection.OpenAsync(cancellationToken);
+                _logger.LogInformation("Database connection opened. Executing query...");
+
+                _logger.LogInformation("Executing query '{query}' to get the result. ", command.CommandText);
+
+                var count = (int)await command.ExecuteScalarAsync(cancellationToken);
+                _logger.LogInformation("Query executed successfully. Result: {count}", count);
+
+                return OperationResult<bool>.Success(count > 0);
+            }
+            catch (OperationCanceledException ex)
+            {
+                return _errorHandler.HandleCancelationToken<bool>(ex);
+            }
+            catch (Exception ex)
+            {
+                return _errorHandler.HandleException<bool>(ex);
+            }
+        }
     }
 }

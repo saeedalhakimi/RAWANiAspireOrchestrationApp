@@ -9,12 +9,12 @@ namespace RAWANiAspireOrchestrationApp.ApiService.Application.Contracts.UserProf
         {
             return new UserProfileResponseDto
             {
-                UserProfileID = userProfile.UserProfileID,
-                UserID = userProfile.UserID,
-                Firstname = userProfile.BasicInfo.Firstname,
-                Lastname = userProfile.BasicInfo.Lastname,
-                Email = userProfile.BasicInfo.Email,
-                DateOfBirth = userProfile.BasicInfo.DateOfBirth,    
+                UserProfileID = userProfile.UserProfileID.Value,
+                UserID = userProfile.UserID.Value,
+                Firstname = userProfile.BasicInfo.Firstname.Value,
+                Lastname = userProfile.BasicInfo.Lastname.Value,
+                Email = userProfile.BasicInfo.Email.Value,
+                DateOfBirth = userProfile.BasicInfo.DateOfBirth.Value,    
                 PhoneNumber = userProfile.BasicInfo.PhoneNumber,
                 CurrentCity = userProfile.BasicInfo.CurrentCity,
                 CreatedAt = userProfile.CreatedAt,
